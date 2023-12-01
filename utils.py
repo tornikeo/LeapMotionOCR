@@ -13,7 +13,7 @@ from skimage.draw import line_aa
 
 def rasterize(points:np.ndarray, gridsize: int,) -> np.ndarray:
         points = (points - points.min(0)) / (points.max(0) - points.min(0))
-        points = np.round(points * (gridsize-1))
+        points = np.ceil(points * (gridsize-1))
         points = points.astype(int)
         
         im = np.zeros((gridsize, gridsize), np.uint8)
@@ -49,3 +49,9 @@ def train_test_split(
     test_size = round(test_size * len(X))
     idx = random.sample(range(len(X)), test_size)
     return X[idx], y[idx]
+
+def load_training_data() -> tuple[list, list]:
+    data = sorted(Path('training_data').glob('*.csv'))
+    labels = pd.Series(data).astype(str).str.extract(r".+stroke_(\d)_.+.csv").astype(int)
+    data = [pd.read_csv(d, header=None) for d in data]
+    return data, labels
