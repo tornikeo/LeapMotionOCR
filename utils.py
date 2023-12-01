@@ -18,16 +18,18 @@ def download_data():
     os.remove('digits_3d_training_data.zip')
     
 def train_test_split(
-    *arrays,
-    test_size=None,
-    random_state=None,
-):
-    for arr in arrays:
-        if random_state is not None:
-            random.seed(random_state)
-        size = len(arr)
-        if test_size < 1:
-            test_size = round(size * test_size)
-        idx = random.sample(range(size), test_size)
-        arr_sampled = arr[idx]
-        return arr_sampled
+    X: np.ndarray,y: np.ndarray,
+    test_size: float=None,
+    random_state: int=None,
+) -> tuple[np.ndarray,np.ndarray]:
+    if random_state is not None:
+        random.seed(random_state)
+    assert len(X) == len(y), "arrays must be of same size"
+    assert isinstance(X, np.ndarray) and isinstance(y, np.ndarray), "X must be a numpy array"
+    assert test_size > 0 and abs(test_size) < 1, "Test size can be in [0,1] range only"
+    
+    test_size = round(test_size * len(X))
+    idx = random.sample(range(len(X)), test_size)
+    return X[idx], y[idx]
+
+    
