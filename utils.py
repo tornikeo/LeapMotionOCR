@@ -50,8 +50,8 @@ def train_test_split(
     idx = random.sample(range(len(X)), test_size)
     return X[idx], y[idx]
 
-def load_training_data() -> tuple[list, list]:
-    data = sorted(Path('training_data').glob('*.csv'))
+def load_training_data(path = "training_data") -> tuple[list, list]:
+    data = sorted(Path(path).glob('*.csv'))
     labels = pd.Series(data).astype(str).str.extract(r".+stroke_(\d)_.+.csv").astype(int)
     data = [pd.read_csv(d, header=None) for d in data]
     return data, labels
