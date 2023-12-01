@@ -9,6 +9,22 @@ import zipfile
 import shutil
 import os
 
+from skimage.draw import line_aa
+
+def rasterize(points:np.ndarray, gridsize: int,) -> np.ndarray:
+        points = (points - points.min(0)) / (points.max(0) - points.min(0))
+        points = np.round(points * (gridsize-1))
+        points = points.astype(int)
+        
+        im = np.zeros((gridsize, gridsize), np.uint8)
+        
+        for i in range(len(points) - 1):
+            x, y, _ = points[i]
+            x_n, y_n, _ = points[i + 1]
+            rr, cc, val = line_aa(-y, x, -y_n, x_n)
+            im[rr,cc] = val * 255
+        return im
+
 def download_data():
     # If you don't have data, download it automatically
     url = "https://github.com/tornikeo/LeapMotionOCR/releases/download/0.1/digits_3d_training_data.zip"
@@ -18,7 +34,9 @@ def download_data():
     os.remove('digits_3d_training_data.zip')
     
 def train_test_split(
-    X: np.ndarray,y: np.ndarray,
+    X: np.ndarray,
+    y: np.ndarray,
+    
     test_size: float=None,
     random_state: int=None,
 ) -> tuple[np.ndarray,np.ndarray]:
@@ -31,5 +49,3 @@ def train_test_split(
     test_size = round(test_size * len(X))
     idx = random.sample(range(len(X)), test_size)
     return X[idx], y[idx]
-
-    
