@@ -164,4 +164,3 @@ digits_3d/
 
 *.npy
 .vscode/launch.json
-sam/test.py
