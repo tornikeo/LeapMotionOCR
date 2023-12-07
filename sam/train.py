@@ -7,7 +7,6 @@ import sys
 sys.path.append('..')
 import utils
 
-
 X, y = utils.load_training_data("../training_data/")
 
 # drop third coordinate if present
@@ -17,8 +16,7 @@ for i in range(len(X)):
 
 train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
 
-# classifier = feature_classifier.FeatureClassifier().fit(train_X, train_y)
-
-classifier = pickle.load(Path('model.pickle').open('rb'))
+classifier = feature_classifier.FeatureClassifier().fit(train_X, train_y)
 pred = classifier.predict(test_X)
 print(classification_report(test_y.to_list(), pred))
+pickle.dump(classifier, Path('model.pickle').open('wb'))
