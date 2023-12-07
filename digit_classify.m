@@ -1,10 +1,5 @@
-clear all; close all; clc;
-
-C = magic(3);
-
-digit_classify_here(C)
-
-function result = digit_classify_here(C)
-    py_c = py.numpy.array(C);
-    result = pyrunfile("hello.py", "result", arr=C);
+function C = digit_classify(testdata)
+    testdata = py.numpy.array(testdata);
+    C = pyrunfile("main.py", "C", testdata=testdata);
+    C = int32(C);
 end

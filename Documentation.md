@@ -38,12 +38,20 @@ The data processing for CNN involves rasterization, followedd by MinMax scaling 
 
 In all our experiments we used learning rate of `1e-3`, and batch size of 128 and used SGD with momentum coefficient of 0.9. All the network architectures used convolution stack, followed by global average pooling and two instances of feedforward layers. 
 
-
 ### Findings
 
-- Higher rasterization resolution results in higher performance. This can be explained by seeing the Figure 1. Classes 1 and 7 for example, have very small details that differentiate them. Low-res rasterization destroys these main differentiating features and make classifier unable to differentiate between instances.
-- We found that it is beneficial for the initial convolution layer have large receptive field (4, instead of 2). This can be explained by how initial conv layers work. Initial conv layers capture basic shapes (edges, angles, corners). Some of our samples have similarly-shaped samples (see 1s and 7s). We need to differentiate between lines that have near-identical angles. For this, larger receptive field works much better.
-- 
+#### Resolution
+Higher rasterization resolution results in higher performance. This can be explained by seeing the Figure 1. Classes 1 and 7 for example, have very small details that differentiate them. Low-res rasterization destroys these main differentiating features and make classifier unable to differentiate between instances.
+#### Receptive field
+We found that it is beneficial for the initial convolution layer have large receptive field (4, instead of 2). This can be explained by how initial conv layers work. Initial conv layers capture basic shapes (edges, angles, corners). Some of our samples have two classes (1s and 7s) that have similar basic shapes. To differentiate between these two classes, larger receptive field works much better, because it can represnt smaller changes in angle and shape.
+
+#### Transfer learning
+Neural networks work better when with more data. Because of this, we augmented the dataset using MNIST dataset. 
+
+TODO:
+
+- If theres some visuals in the notebook, plop them down here from NN notebooks.
+- Once that's done, I do wrapping of 
 
 
 
