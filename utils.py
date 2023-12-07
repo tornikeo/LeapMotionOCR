@@ -88,7 +88,7 @@ def show(arr: np.ndarray) -> None:
 
 
 def accuracy_score(y_true, y_pred):
-    return (y_true == y_pred).mean()
+    return np.isclose(y_true, y_pred).mean()
 
 class AccuracyScorerMixin:
     def score(self, X, y):
@@ -193,6 +193,37 @@ class SVC(BaseEstimator, AccuracyScorerMixin):
 
         return y_pred.astype(int)
 
+class KNN(BaseEstimator, AccuracyScorerMixin):
+    def __init__(self, n_neighbors:int) -> None:
+        self.n_neighbors = n_neighbors
+        self.xy = None
+        
+    def fit(self, x:np.ndarray, y:np.ndarray):
+        self.xy = x.copy(), y.copy()
+
+    def predict(self, x:np.ndarray):
+        # Ensure that the model has been trained
+        if self.xy is None:
+            raise ValueError("Model has not been trained. Call fit() first.")
+
+        # Unpack training data
+        x_train, y_train = self.xy
+        
+        # Calculate distances between each test point and all training points
+        distances = np.linalg.norm(x_train[:, np.newaxis, :] - x[np.newaxis, :, :], axis=2)
+
+        # Find the indices of the k-nearest neighbors for each test point
+        nearest_neighbors_indices = np.argpartition(distances, self.n_neighbors, axis=0)[:self.n_neighbors, :]
+
+        # Get the corresponding labels of the k-nearest neighbors
+        nearest_neighbors_labels = y_train[nearest_neighbors_indices]
+
+        # Predict the majority class for each test point
+        predictions = np.apply_along_axis(lambda x: np.bincount(x).argmax(), 
+                                          axis=0, 
+                                          arr=nearest_neighbors_labels)
+        return predictions
+
 
 def cross_val_score(
     clf:BaseEstimator, 
@@ -202,7 +233,7 @@ def cross_val_score(
 ) -> np.ndarray:
     "Returns scores over all CV splits"
     fold_size = len(x_train) // cv
-    scores = np.zeros(cv)
+    scores = np.zeros(cv, dtype='float32')
     for i in range(cv):
         start = i * fold_size
         end = start + fold_size
@@ -224,3 +255,37 @@ def mute_stdout():
     yield
     sys.stdout = stdout
     
+class PCA(BaseEstimator, TransformerMixin):
+    def __init__(self, n_components:int) -> None:
+        super().__init__()
+        self.n_components = n_components
+        
+    def fit(self, x:np.ndarray, y:np.ndarray=None):
+        assert np.isclose(x.mean(0), 0).all() and np.isclose(x.std(0), 1).all(), \
+            "Ayoo, you forgot to standartize data before going to PCA. Getcha unscaled ass outta here."
+        x = x.copy()
+        cov = np.cov(x, rowvar = False)
+        eig_val, eig_vec = np.linalg.eig(cov)
+        eig_importance = np.argsort(eig_val)[::-1] 
+        self.reduction_matrix = eig_vec[:,eig_importance]
+        return self
+    
+    def transform(self, x, y=None):
+        x_reduced = np.matmul(x, self.reduction_matrix[:,:self.n_components])
+        return x_reduced
+    
+def evaluate(
+    clf,
+    x_train_scale, y_train,
+    x_test_scale, y_test,
+) -> tuple[float, float]:
+    """
+    Estimates training performance with CV.
+    Also returns test performance. 
+    """
+    cv_score = cross_val_score(clf, 
+                    x_train_scale, y_train, 
+                    cv = 4)
+    clf.fit(x_train_scale, y_train)
+    test_acc = accuracy_score(y_test, clf.predict(x_test_scale))
+    return cv_score, test_acc
