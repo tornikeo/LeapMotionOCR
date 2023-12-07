@@ -13,20 +13,22 @@ from contextlib import contextmanager
 import sys
 from sklearn.base import BaseEstimator, TransformerMixin
 from skimage.draw import line_aa
+from sklearn.metrics import silhouette_score
+
 
 def rasterize(points:np.ndarray, gridsize: int) -> np.ndarray:
-        points = (points - points.min(0)) / (points.max(0) - points.min(0))
-        points = np.ceil(points * (gridsize-1))
-        points = points.astype(int)
-        
-        im = np.zeros((gridsize, gridsize), np.uint8)
-        
-        for i in range(len(points) - 1):
-            x, y, _ = points[i]
-            x_n, y_n, _ = points[i + 1]
-            rr, cc, val = line_aa(-y, x, -y_n, x_n)
-            im[rr,cc] = val * 255
-        return im
+    points = (points - points.min(0)) / (points.max(0) - points.min(0))
+    points = np.ceil(points * (gridsize-1))
+    points = points.astype(int)
+    
+    im = np.zeros((gridsize, gridsize), np.uint8)
+    
+    for i in range(len(points) - 1):
+        x, y, _ = points[i]
+        x_n, y_n, _ = points[i + 1]
+        rr, cc, val = line_aa(-y, x, -y_n, x_n)
+        im[rr,cc] = val * 255
+    return im
 
 def download_data():
     # If you don't have data, download it automatically
@@ -93,6 +95,70 @@ def accuracy_score(y_true, y_pred):
 class AccuracyScorerMixin:
     def score(self, X, y):
         return accuracy_score(y, self.predict(X))
+
+
+class DidNotConvergeError(Exception):
+    pass
+
+class KMeans:
+    def __init__(self, n_clusters: int, max_iter=100, n_init=10):
+        self.n_cluster = n_clusters
+        self.max_iter = max_iter
+        self.centroids = None
+        self.labels = None
+        self.n_init = n_init
+
+
+    def singleKmeans(self, X):
+        mean = X.mean()
+        std = X.std()
+        labels = np.zeros(X.shape[0])
+        try_count = 0
+        while try_count < 20:
+            try:
+                centers = np.random.normal(mean, std, (self.n_cluster, X.shape[1]))
+                for iter_i in range(self.max_iter):
+                    old_centers = centers.copy()
+                    for pt_i, pt in enumerate(X):
+                        dists = np.zeros(self.n_cluster)
+                        for cluster_i, cluster in enumerate(centers):
+                            dists[cluster_i] = np.linalg.norm(pt - cluster,2)
+
+                        labels[pt_i] = dists.argmin()  
+
+                    for i in range(len(centers)):
+                        tmp = X[labels == i]
+                        if len(tmp) == 0:
+                            raise DidNotConvergeError()
+                        centers[i] = X[labels == i].mean(axis=0)
+
+                    if np.all(centers == old_centers):
+                        break
+                break
+            except DidNotConvergeError:
+                try_count += 1
+        return centers, labels
+
+    def fit(self, X):
+        best_centroids = None
+        best_score = -1
+        best_labels = None
+        for _ in range(self.n_init):
+            centers, labels = self.singleKmeans(X)
+            score = silhouette_score(X, labels)
+            if score > best_score:
+                best_score = score
+                best_centroids = centers
+                best_labels = labels
+
+        self.centroids = best_centroids
+        self.labels = best_labels
+        return self
+            
+                
+
+
+
 
 class KMeansClassifier(BaseEstimator, TransformerMixin, AccuracyScorerMixin):
     def __init__(self, n_cluster: int, max_iter=100):
