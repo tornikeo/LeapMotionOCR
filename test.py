@@ -3,12 +3,10 @@ from sklearn.model_selection import train_test_split
 import feature_classifier
 import pickle
 from pathlib import Path
-import sys
-sys.path.append('..')
 import utils
 
 
-X, y = utils.load_training_data("../training_data/")
+X, y = utils.load_training_data("training_data/")
 
 # drop third coordinate if present
 for i in range(len(X)):

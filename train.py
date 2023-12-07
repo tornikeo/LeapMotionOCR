@@ -7,7 +7,7 @@ import sys
 sys.path.append('..')
 import utils
 
-X, y = utils.load_training_data("../training_data/")
+X, y = utils.load_training_data("training_data/")
 
 # drop third coordinate if present
 for i in range(len(X)):

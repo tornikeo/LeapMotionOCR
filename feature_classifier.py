@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from scipy.special import kl_div
-
-import sys
-sys.path.append('..')
 from utils import KMeans
 
 def bucketize(x: float, num_buckets: int, range_: tuple[int, int]) -> int:
@@ -156,16 +153,13 @@ class FeatureClassifier(BaseEstimator, ClassifierMixin):
         Returns:
         - preds (list): List of predicted labels.
         """
-        preds = []
-        for df in X:
-            test_features = featurize(df, self.line_bin_count, self.angle_bin_count)
+        test_features = featurize(X, self.line_bin_count, self.angle_bin_count)
 
-            scores = []
-            for template in self.fvs:
-                score = np.sum(kl_div(test_features, template))
-                scores.append(score)
+        scores = []
+        for template in self.fvs:
+            score = np.sum(kl_div(test_features, template))
+            scores.append(score)
 
-            selected = self.cluster_mapping[np.argmin(scores)]
-            preds.append(selected)
+        selected = self.cluster_mapping[np.argmin(scores)]
 
-        return preds
+        return int(selected)
