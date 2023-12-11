@@ -6,24 +6,19 @@ from pathlib import Path
 import utils
 
 
-<<<<<<< Updated upstream:test.py
-X, y = utils.load_training_data("training_data/")
-=======
 def main(s):
     X, y = utils.load_training_data("../training_data/")
->>>>>>> Stashed changes:sam/test.py
-
-
-
     # drop third coordinate if present
     for i in range(len(X)):
         X[i].drop(2, axis=1, inplace=True)
         X[i] = (X[i] - X[i].mean()) / X[i].std()
 
-    train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
+    train_X, test_X, train_y, test_y = train_test_split(
+        X, y, test_size=0.25, random_state=42, stratify=y
+    )
 
     # classifier = feature_classifier.FeatureClassifier().fit(train_X, train_y)
 
-    classifier = pickle.load(Path('model.pickle').open('rb'))
+    classifier = pickle.load(Path("model.pickle").open("rb"))
     pred = classifier.predict(test_X)
     print(classification_report(test_y.to_list(), pred))

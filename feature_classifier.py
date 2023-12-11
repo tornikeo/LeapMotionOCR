@@ -4,15 +4,16 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from scipy.special import kl_div
 from utils import KMeans
 
+
 def bucketize(x: float, num_buckets: int, range_: tuple[int, int]) -> int:
     """
     Bucketizes a value based on a given range into a specified number of buckets.
-    
+
     Args:
         x (float): The value to be bucketized.
         num_buckets (int): The number of buckets to divide the range into.
         range_ (tuple[int, int]): The range of values to consider for bucketization.
-    
+
     Returns:
         int: The bucket index where the value falls into.
     """
@@ -22,7 +23,7 @@ def bucketize(x: float, num_buckets: int, range_: tuple[int, int]) -> int:
     return res
 
 
-def featurize_points(df: pd.DataFrame, bin_count : int) -> np.ndarray:
+def featurize_points(df: pd.DataFrame, bin_count: int) -> np.ndarray:
     """
     Featurizes a points by calculating the magnitude of each point vector and
     distributing them into bins based on their angle.
@@ -35,7 +36,7 @@ def featurize_points(df: pd.DataFrame, bin_count : int) -> np.ndarray:
         np.ndarray: The featurized point vector as an array of normalized bin values.
     """
     buckets = np.zeros(bin_count)
-    for i in range(df.shape[0]-1):
+    for i in range(df.shape[0] - 1):
         angle = np.arctan2(df.iloc[i, 1], df.iloc[i, 0])
         bucket = bucketize(angle, bin_count, (-np.pi, np.pi))
         magnitude = np.linalg.norm(df.iloc[i])
@@ -45,7 +46,7 @@ def featurize_points(df: pd.DataFrame, bin_count : int) -> np.ndarray:
     return res
 
 
-def featurize_lines(df: pd.DataFrame, bin_count : int) -> np.ndarray:
+def featurize_lines(df: pd.DataFrame, bin_count: int) -> np.ndarray:
     """
     Featurizes the lines in a DataFrame by calculating the angle and magnitude of each line segment.
 
@@ -56,11 +57,11 @@ def featurize_lines(df: pd.DataFrame, bin_count : int) -> np.ndarray:
     Returns:
         np.ndarray: The featurized representation of the lines.
     """
-    
+
     buckets = np.zeros(bin_count)
 
-    for i in range(df.shape[0]-1):
-        dir_vec = df.iloc[i+1] - df.iloc[i]
+    for i in range(df.shape[0] - 1):
+        dir_vec = df.iloc[i + 1] - df.iloc[i]
         angle = np.arctan2(dir_vec.iloc[1], dir_vec.iloc[0])
 
         bucket = bucketize(angle, bin_count, (-np.pi, np.pi))
@@ -71,7 +72,9 @@ def featurize_lines(df: pd.DataFrame, bin_count : int) -> np.ndarray:
     return res
 
 
-def featurize(df: pd.DataFrame, line_bin_count: int, angle_bin_count: int) -> np.ndarray:
+def featurize(
+    df: pd.DataFrame, line_bin_count: int, angle_bin_count: int
+) -> np.ndarray:
     """
     Featurizes the given DataFrame by extracting line and angle features.
 
@@ -95,7 +98,7 @@ class FeatureClassifier(BaseEstimator, ClassifierMixin):
     """
 
     LINE_BINS = 12  # length of the line segments feature vector
-    ANGLE_BINS = 12 # length of the angle feature vector
+    ANGLE_BINS = 12  # length of the angle feature vector
     # number of clusters for each digit
     DEFAULT_CLUSTER_COUNT = (
         2,  # 0
@@ -110,7 +113,12 @@ class FeatureClassifier(BaseEstimator, ClassifierMixin):
         2,  # 9
     )
 
-    def __init__(self, line_bin_count=LINE_BINS, angle_bin_count=ANGLE_BINS, cluster_count=DEFAULT_CLUSTER_COUNT):
+    def __init__(
+        self,
+        line_bin_count=LINE_BINS,
+        angle_bin_count=ANGLE_BINS,
+        cluster_count=DEFAULT_CLUSTER_COUNT,
+    ):
         self.fvs = []
         self.cluster_mapping = []
         self.line_bin_count = line_bin_count
@@ -128,14 +136,18 @@ class FeatureClassifier(BaseEstimator, ClassifierMixin):
         Returns:
         - self (FeatureClassifier): The fitted classifier.
         """
-        self.cluster_mapping = [i for i in range(10) for _ in range(self.cluster_count[i])]
+        self.cluster_mapping = [
+            i for i in range(10) for _ in range(self.cluster_count[i])
+        ]
         self.fvs = []
         for num in range(10):
             features = []
             for i, df in enumerate(X):
                 if y.iloc[i] != num:
                     continue
-                features.append(featurize(df, self.line_bin_count, self.angle_bin_count))
+                features.append(
+                    featurize(df, self.line_bin_count, self.angle_bin_count)
+                )
 
             km = KMeans(n_clusters=self.cluster_count[num], n_init=20)
             km.fit(np.array(features))

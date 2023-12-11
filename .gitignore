@@ -143,7 +143,7 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
+#001720114 Pyre type checker
 .pyre/
 
 # pytype static type analyzer
@@ -165,3 +165,4 @@ digits_3d/
 *.npy
 .vscode/launch.json
 *.asv
+*.pickle
