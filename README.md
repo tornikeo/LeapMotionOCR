@@ -9,6 +9,15 @@ Samuel Repka, Matej Kunda, and Tornike Onoprishvili
 This repository contains files for 2023 PRML final project. 
 
 
+## Description
+
+Matlab uses a `digit_classify.m` file to invoke the file called `main.py`. We also built a `Runner.m` to test that `digit_classify.m` indeed works well.
+
+We also have `train.py` and `test.py` these files are used for creating the pickled models that are used by `main.py`
+
+`utils.py` contains most of the hand-made ML and support code that we use to replace Scikit's functions.
+
+
 ## Grading criteria
 
 | Grading Criteria            | Unacceptable   | Below Average  | Average  | Above Average | Excellent  |
